@@ -7,7 +7,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 def main():
-    logging.basicConfig(filename='app.log', level=logging.INFO)
+    logging.basicConfig(level=logging.INFO)
     logger.info("Program start")
 
 if __name__ == '__main__':

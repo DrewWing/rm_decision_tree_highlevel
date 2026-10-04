@@ -5,7 +5,8 @@
 .ignore
 *.ignore.*
 
-.log
+*.log
+
 .temp
 .tmp
 
