@@ -5,6 +5,10 @@
 .ignore
 *.ignore.*
 
+.log
+.temp
+.tmp
+
 .pyc
 __pycache__
 
