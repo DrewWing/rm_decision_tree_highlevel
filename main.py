@@ -23,17 +23,20 @@ class SMachine:
         else:
             self.currentState = currentState
         self.healthLimit = 25
+        self.healthLimitHigh = 100
 
     def __repr__(self) -> str:
         return f"StateMachine with current state {self.currentState}"
 
     def updateHealthState(self, health:float):
-        if (health > self.healthLimit):
-            self.currentState = self.highHealthState
-        else:
+        if (health < self.healthLimit and self.currentState == self.highHealthState):
             self.currentState = self.lowHealthState
+            logger.info(f"[updateHealth] Updating state to {self.currentState} due to health at {health}  (limit at {self.healthLimit})")
+            
+        elif (health >= self.healthLimitHigh and self.currentState == self.lowHealthState):
+            logger.info(f"[updateHealth] Updating state to {self.currentState} due to health at {health}  (high limit at {self.healthLimitHigh})")
+            self.currentState = self.highHealthState
         
-        logger.info(f"[updateHealth] Updating state to {self.currentState} due to health at {health}  (limit at {self.healthLimit})")
 
 
 def main():
