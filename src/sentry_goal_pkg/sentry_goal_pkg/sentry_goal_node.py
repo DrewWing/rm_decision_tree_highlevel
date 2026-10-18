@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# Vibe coded bc unfortunately I don't have time for this
 
 import rclpy
 from rclpy.node import Node
@@ -11,18 +10,54 @@ from geometry_msgs.msg import PoseStamped
 from std_msgs.msg import Int32
 
 
+# x pos, y pos, z pos, rot_x, rot_y, rot_z, rot_w
+CENTER:tuple[float,float,float,float,float,float,float] = ( 2.0, 0.5, 0.0, 0.0, 0.0, 0.0, 1.0)
+HOME:  tuple[float,float,float,float,float,float,float] = (-2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0)
+
+class State:
+    # Pose is x, y, z, rot_x, rot_y, rot_z, rot_w
+    def __init__(self, 
+                 name:str, 
+                 hasPose: bool, 
+                 pose: tuple[float,float,float,float,float,float,float] = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0)
+                 ):
+        self.name: str = name
+        self.hasPose: bool = hasPose
+        self.pose: tuple[float,float,float,float,float,float,float] = pose
+
+    def __repr__(self) -> str:
+        return self.name
+
+
+CENTER_STATE = State("Center State", hasPose=True, pose=CENTER)
+HOME_STATE = State("Home State", hasPose=True, pose=HOME)
+
 
 class GoalNode(Node):
-    def __init__(self):
+    def __init__(self,
+                 lowHealthState: State = HOME_STATE,
+                 highHealthState:State = CENTER_STATE,
+                 lowHealthTrigger: int = 25, 
+                 highHealthTrigger:int = 100
+                 ):
         super().__init__('goal_node')
 
+        # Nav2 stuff
         self._action_client = ActionClient(
             self,
             NavigateToPose,
             'navigate_to_pose'
         )
 
-        self.health = None
+        # Health and state stuff
+        self.health = 50
+        self.lowHealthTrigger: int = lowHealthTrigger
+        self.highHealthTrigger:int = highHealthTrigger
+        self.lowHealthState: State = lowHealthState
+        self.highHealthState:State = highHealthState
+
+        self.state: State = highHealthState
+
         self.health_subscription = self.create_subscription(
             Int32,
             '/health',
@@ -30,10 +65,25 @@ class GoalNode(Node):
             10
         )
 
+        # Doing stuff
         self.get_logger().info('Waiting for Nav2 action server...')
         self._action_client.wait_for_server()
+        self.get_logger().info('Nav2 server setup and ready.')
 
         self.send_goal()
+
+
+    def updateState(self):
+        if self.state == self.lowHealthState and self.health >= self.highHealthTrigger:
+            self.state = self.highHealthState
+            self.get_logger().info(f"Changing state to {self.state}")
+            self.send_goal()
+        
+        elif self.state == self.highHealthState and self.health <= self.lowHealthTrigger:
+            self.state = self.lowHealthState
+            self.get_logger().info(f"Changing state to {self.state}")
+            self.send_goal()
+                    
 
 
     def health_callback(self, msg):
@@ -41,13 +91,13 @@ class GoalNode(Node):
         self.get_logger().info(
             f'Received health: {self.health}'
         )
+        # self.get_logger().info(f"Current state {self.state}  self.health={self.health} (type {type(self.health)})")
+        # self.get_logger().info(f"self.lowhealthstate={self.lowHealthState} self.lowhealthtrigger={self.lowHealthTrigger}")
+        # self.get_logger().info(f"self.highhealthstate={self.highHealthState} self.highealthtrigger={self.highHealthTrigger}")
+        # self.get_logger().info(f"self.state == self.lowHealthState {self.state == self.lowHealthState}  self.health >= self.highHealthTrigger {self.health >= self.highHealthTrigger}")
+        
+        self.updateState()
 
-        # if self.health >= 80:
-        #     self.set_destination('normal')
-        # elif self.health >= 40:
-        #     self.set_destination('safe')
-        # else:
-        #     self.set_destination('emergency')
 
     def send_goal(self):
         goal = NavigateToPose.Goal()
@@ -57,21 +107,22 @@ class GoalNode(Node):
         goal.pose.header.frame_id = 'map'
         goal.pose.header.stamp = self.get_clock().now().to_msg()
 
-        goal.pose.pose.position.x = 2.0
-        goal.pose.pose.position.y = 1.0
-        goal.pose.pose.position.z = 0.0
+        (   goal.pose.pose.position.x, 
+            goal.pose.pose.position.y, 
+            goal.pose.pose.position.z,
+            goal.pose.pose.orientation.x,
+            goal.pose.pose.orientation.y,
+            goal.pose.pose.orientation.z,
+            goal.pose.pose.orientation.w
+            ) = self.state.pose
 
         # Orientation: yaw = 0 radians
-        goal.pose.pose.orientation.x = 0.0
-        goal.pose.pose.orientation.y = 0.0
-        goal.pose.pose.orientation.z = 0.0
-        goal.pose.pose.orientation.w = 1.0
 
         self.get_logger().info('Sending navigation goal...')
 
         future = self._action_client.send_goal_async(
-            goal,
-            feedback_callback=self.feedback_callback
+            goal#,
+            # feedback_callback=self.feedback_callback
         )
         future.add_done_callback(self.goal_response_callback)
 
@@ -99,12 +150,12 @@ class GoalNode(Node):
             self.get_logger().error('Navigation aborted')
         elif result.status == 5:  # STATUS_CANCELED
             self.get_logger().warning('Navigation canceled')
+            rclpy.shutdown()
         else:
             self.get_logger().info(
                 f'Navigation finished with status: {result.status}'
             )
 
-        rclpy.shutdown()
 
 
 def main(args=None):
