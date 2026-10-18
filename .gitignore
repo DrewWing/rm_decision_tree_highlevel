@@ -6,6 +6,9 @@
 *.ignore.*
 
 *.log
+log/
+build/
+install/
 
 .temp
 .tmp

@@ -1,3 +1,4 @@
+<name>goal_node</name>
 <exec_depend>rclpy</exec_depend>
 <exec_depend>geometry_msgs</exec_depend>
 <exec_depend>nav2_msgs</exec_depend>
