@@ -7,8 +7,15 @@ import logging
 logger = logging.getLogger(__name__)
 
 class State:
-    def __init__(self, name:str):
-        self.name=name
+    # Pose is x, y, z, rot_x, rot_y, rot_z, rot_w
+    def __init__(self, 
+                 name:str, 
+                 hasPose: bool, 
+                 pose: tuple[float,float,float,float,float,float,float] = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0)
+                 ):
+        self.name: str = name
+        self.hasPose: bool = hasPose
+        self.pose: tuple[float,float,float,float,float,float,float] = pose
 
     def __repr__(self) -> str:
         return self.name
@@ -36,7 +43,6 @@ class SMachine:
         elif (health >= self.healthLimitHigh and self.currentState == self.lowHealthState):
             logger.info(f"[updateHealth] Updating state to {self.currentState} due to health at {health}  (high limit at {self.healthLimitHigh})")
             self.currentState = self.highHealthState
-        
 
 
 def main():

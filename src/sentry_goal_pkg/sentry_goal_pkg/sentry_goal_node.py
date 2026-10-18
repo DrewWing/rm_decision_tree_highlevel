@@ -8,6 +8,9 @@ from rclpy.action import ActionClient
 from nav2_msgs.action import NavigateToPose
 from geometry_msgs.msg import PoseStamped
 
+from std_msgs.msg import Int32
+
+
 
 class GoalNode(Node):
     def __init__(self):
@@ -19,10 +22,32 @@ class GoalNode(Node):
             'navigate_to_pose'
         )
 
+        self.health = None
+        self.health_subscription = self.create_subscription(
+            Int32,
+            '/health',
+            self.health_callback,
+            10
+        )
+
         self.get_logger().info('Waiting for Nav2 action server...')
         self._action_client.wait_for_server()
 
         self.send_goal()
+
+
+    def health_callback(self, msg):
+        self.health = msg.data
+        self.get_logger().info(
+            f'Received health: {self.health}'
+        )
+
+        # if self.health >= 80:
+        #     self.set_destination('normal')
+        # elif self.health >= 40:
+        #     self.set_destination('safe')
+        # else:
+        #     self.set_destination('emergency')
 
     def send_goal(self):
         goal = NavigateToPose.Goal()

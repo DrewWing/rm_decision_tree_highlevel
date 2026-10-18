@@ -24,7 +24,8 @@ setup(
     # },
     entry_points={
         'console_scripts': [
-            'sentry_goal_node = sentry_goal_pkg.sentry_goal_node:main'
+            'sentry_goal_node = sentry_goal_pkg.sentry_goal_node:main',
+            'health_publisher = sentry_goal_pkg.health_publisher:main'
         ],
     },
 )
