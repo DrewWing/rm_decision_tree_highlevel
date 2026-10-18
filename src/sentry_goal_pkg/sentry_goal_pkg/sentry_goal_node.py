@@ -83,9 +83,9 @@ class GoalNode(Node):
 
 
 def main(args=None):
+    print("[sentry_goal_node] MAIN started!")
     rclpy.init(args=args)
     node = GoalNode()
-
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:
