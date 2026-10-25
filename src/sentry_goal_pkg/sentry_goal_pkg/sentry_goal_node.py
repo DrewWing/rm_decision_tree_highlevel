@@ -11,8 +11,8 @@ from std_msgs.msg import Int32
 
 
 # x pos, y pos, z pos, rot_x, rot_y, rot_z, rot_w
-CENTER:tuple[float,float,float,float,float,float,float] = ( 2.0, 0.5, 0.0, 0.0, 0.0, 0.0, 1.0)
-HOME:  tuple[float,float,float,float,float,float,float] = (-2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0)
+CENTER:tuple[float,float,float,float,float,float,float] = ( 3.42, 0.256, 0.0, 0.0, 0.0, 0.0, 1.0)
+HOME:  tuple[float,float,float,float,float,float,float] = ( 0.517, 0.0,  0.0, 0.0, 0.0, 0.0, 1.0)
 
 class State:
     # Pose is x, y, z, rot_x, rot_y, rot_z, rot_w
